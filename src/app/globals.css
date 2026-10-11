@@ -10,17 +10,37 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Brand palette sampled from the TemanNakes logo (teal gradient + navy accent). */
+  --color-brand-50: #eafbfb;
+  --color-brand-100: #cdf3f4;
+  --color-brand-200: #9ee6e9;
+  --color-brand-300: #69d2d7;
+  --color-brand-400: #3cb9c0;
+  --color-brand-500: #1d9fa7;
+  --color-brand-600: #137f87;
+  --color-brand-700: #10656c;
+  --color-brand-800: #0f5258;
+  --color-brand-900: #0e4348;
+
+  --color-navy-50: #eaf1f5;
+  --color-navy-100: #cadde7;
+  --color-navy-200: #9bc0d2;
+  --color-navy-300: #5f93ad;
+  --color-navy-400: #336d87;
+  --color-navy-500: #1c4f66;
+  --color-navy-600: #153f54;
+  --color-navy-700: #123548;
+  --color-navy-800: #0e2a3a;
+  --color-navy-900: #0a1f2b;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-brand-500 focus:outline-none;
+  }
 }

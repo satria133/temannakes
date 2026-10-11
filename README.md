@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TemanNakes (P1)
 
-## Getting Started
+Aplikasi untuk tenaga kesehatan (apoteker, dokter, perawat, bidan, TTLM,
+tenaga vokasi farmasi): pengajuan dokumen SKP/rekapitulasi praktik profesi
+dengan approval admin dan PDF siap cetak, serta info webinar & loker medis.
 
-First, run the development server:
+## Stack
+
+Next.js 16 (App Router, TypeScript, Turbopack) · Prisma + SQLite (dev) ·
+Auth.js v5 (credentials) · Tailwind CSS · @react-pdf/renderer.
+
+## Menjalankan secara lokal
 
 ```bash
+npm install
+npm run db:push     # buat skema di dev.db (SQLite)
+npm run db:seed      # buat akun admin + master data kegiatan per profesi
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka http://localhost:3000. Pastikan menjalankan di port yang sama dengan
+`NEXTAUTH_URL` pada `.env` (default `http://localhost:3000`), kalau tidak
+redirect login akan mengarah ke host yang salah.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Akun admin default (ubah via `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` di
+`.env` sebelum seeding jika perlu):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+admin@temannakes.id / AdminTemanNakes123
+```
 
-## Learn More
+Nakes mendaftar sendiri lewat halaman `/register`.
 
-To learn more about Next.js, take a look at the following resources:
+## Struktur fitur
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `/nakes/profile` — lengkapi data profesional.
+- `/nakes/skp` — riwayat pengajuan SKP, `/nakes/skp/new` untuk mengajukan baru.
+- `/admin/submissions` — review & approve/reject pengajuan SKP.
+- `/admin/webinars`, `/admin/jobs` — kelola info webinar & loker.
+- `/webinars`, `/jobs` — listing publik (webinar H-7 di-highlight), bisa
+  berlangganan jika sudah login.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Catatan produksi
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Database: skema `prisma/schema.prisma` pakai SQLite untuk kemudahan dev
+  (Prisma tidak mendukung enum di SQLite, jadi field seperti `role`,
+  `profession`, `status` disimpan sebagai string dan divalidasi di
+  `src/lib/constants.ts`). Untuk produksi, ganti `provider` ke `postgresql`
+  dan set `DATABASE_URL` yang sesuai.
+- File upload (kop surat instansi & bukti pelayanan) disimpan di
+  `UPLOAD_DIR` (default `storage/uploads/`, di Docker `/app/data/uploads`)
+  dan hanya dilayani lewat route ber-auth `/files/...` — bukti pelayanan
+  hanya bisa dibuka pemiliknya dan admin.
+- Panduan deploy ke VPS yang sama dengan UNSPSC-App: lihat `DEPLOY.md`.
+- `AUTH_SECRET` di `.env` adalah nilai development — wajib diganti dengan
+  secret acak yang kuat di produksi.

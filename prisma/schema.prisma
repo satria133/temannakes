@@ -1,0 +1,163 @@
+// TemanNakes P1 data model
+// Dev uses SQLite for zero-setup local development (enums aren't supported by
+// the sqlite connector, so Role/Profession/SubmissionStatus/SubscriptionType
+// are plain strings validated in app code — see src/lib/constants.ts).
+// For production, switch provider to "postgresql" and set DATABASE_URL
+// accordingly (enums can be reintroduced at that point if desired).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("NAKES") // NAKES | ADMIN
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  nakesProfile        NakesProfile?
+  createdWebinars     Webinar[]           @relation("WebinarCreatedBy")
+  createdJobPostings  JobPosting[]        @relation("JobPostingCreatedBy")
+  reviewedSubmissions ServiceSubmission[] @relation("SubmissionReviewedBy")
+  subscriptions       Subscription[]
+  institutionsAdded   Institution[]       @relation("InstitutionAddedBy")
+}
+
+model NakesProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fullName              String
+  profession            String   // TTLM | PERAWAT | TENAGA_VOKASI_FARMASI | APOTEKER | DOKTER_UMUM | BIDAN | LAINNYA
+  educationLevel        String
+  yearsOfService        Int
+  serviceResponsibility String
+  strNumber             String
+  sipNumber             String
+  sipValidUntil         DateTime
+  position              String
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  submissions           ServiceSubmission[]
+}
+
+model Institution {
+  id            String   @id @default(cuid())
+  name          String
+  letterheadUrl String
+  addedById     String
+  addedBy       User     @relation("InstitutionAddedBy", fields: [addedById], references: [id])
+  createdAt     DateTime @default(now())
+
+  submissions   ServiceSubmission[]
+
+  @@unique([name])
+}
+
+model ActivityTemplate {
+  id         String   @id @default(cuid())
+  profession String
+  groupLabel String?
+  name       String
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  entries    ServiceEntry[]
+}
+
+model ServiceSubmission {
+  id             String       @id @default(cuid())
+  nakesProfileId String
+  nakesProfile   NakesProfile @relation(fields: [nakesProfileId], references: [id], onDelete: Cascade)
+
+  institutionId  String
+  institution    Institution  @relation(fields: [institutionId], references: [id])
+
+  profession     String
+  periodStart    DateTime
+  periodEnd      DateTime
+  periodMonths   Int          // 6 or 12
+
+  status         String       @default("DRAFT") // DRAFT | SUBMITTED | APPROVED | REJECTED
+  adminNote      String?
+  reviewedById   String?
+  reviewedBy     User?        @relation("SubmissionReviewedBy", fields: [reviewedById], references: [id])
+  reviewedAt     DateTime?
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  entries        ServiceEntry[]
+  evidenceFiles  EvidenceFile[]
+}
+
+model ServiceEntry {
+  id                 String            @id @default(cuid())
+  submissionId       String
+  submission         ServiceSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  activityTemplateId String?
+  activityTemplate   ActivityTemplate? @relation(fields: [activityTemplateId], references: [id])
+  customActivityName String?
+
+  month              Int               // 1-12
+  year               Int
+  quantity           Int               @default(0)
+
+  @@index([submissionId])
+}
+
+model EvidenceFile {
+  id           String            @id @default(cuid())
+  submissionId String
+  submission   ServiceSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  fileUrl      String
+  fileName     String
+  uploadedAt   DateTime          @default(now())
+}
+
+model Webinar {
+  id               String   @id @default(cuid())
+  title            String
+  description      String
+  eventDate        DateTime
+  registrationLink String
+  createdById      String
+  createdBy        User     @relation("WebinarCreatedBy", fields: [createdById], references: [id])
+  createdAt        DateTime @default(now())
+}
+
+model JobPosting {
+  id          String   @id @default(cuid())
+  title       String
+  institution String
+  description String
+  location    String
+  applyLink   String
+  expiresAt   DateTime
+  createdById String
+  createdBy   User     @relation("JobPostingCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // WEBINAR | LOKER
+  createdAt DateTime @default(now())
+
+  @@unique([userId, type])
+}
