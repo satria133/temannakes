@@ -120,6 +120,24 @@ async function main() {
     console.log(`Admin created: ${adminEmail}`);
   }
 
+  // Akun nakes uji (opsional): hanya dibuat bila kedua env di-set, jadi tidak
+  // ikut membuat akun berpassword publik di produksi secara tidak sengaja.
+  const testEmail = process.env.SEED_TEST_NAKES_EMAIL;
+  const testPassword = process.env.SEED_TEST_NAKES_PASSWORD;
+  if (testEmail && testPassword) {
+    const existing = await prisma.user.findUnique({ where: { email: testEmail } });
+    if (!existing) {
+      await prisma.user.create({
+        data: {
+          email: testEmail,
+          passwordHash: await bcrypt.hash(testPassword, 10),
+          role: "NAKES",
+        },
+      });
+      console.log(`Test nakes created: ${testEmail}`);
+    }
+  }
+
   await migrateLegacyProfessionCodes();
 
   for (const [profession, activities] of Object.entries(ACTIVITY_TEMPLATES)) {

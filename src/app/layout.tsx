@@ -95,7 +95,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         </header>
         <main className="flex-1">{children}</main>
         <footer className="border-t bg-white py-6 text-center text-xs text-navy-500">
-          TemanNakes — aplikasi untuk tenaga kesehatan
+          TemanNakes — teman bertumbuh, profesional berkembang
         </footer>
       </body>
     </html>
