@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireNakes } from "@/lib/session";
 import { CREDITS_PER_DOCUMENT } from "@/lib/constants";
-import { adminWhatsappUrl, creditPriceLabel } from "@/lib/topup";
+import { getTopupInfo } from "@/lib/topup";
 
 export default async function TopupPage() {
   const user = await requireNakes();
@@ -18,8 +18,9 @@ export default async function TopupPage() {
     }),
   ]);
 
-  const price = creditPriceLabel();
-  const waUrl = adminWhatsappUrl(
+  const topup = await getTopupInfo();
+  const price = topup.priceLabel;
+  const waUrl = topup.whatsappUrl(
     `Halo Admin TemanNakes, saya ${account.nakesProfile?.fullName ?? ""} (${account.email}) ` +
       `ingin topup kredit dokumen SKP.`
   );

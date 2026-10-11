@@ -90,8 +90,10 @@ Simpan (Ctrl+O, Enter, Ctrl+X), lalu `chmod 600 .env`.
 
 - `SEED_ADMIN_PASSWORD` hanya dipakai saat akun admin **pertama kali** dibuat;
   mengubahnya belakangan tidak mengganti password admin yang sudah ada.
-- `ADMIN_WHATSAPP` (format 62…, tanpa `+`) dan `CREDIT_PRICE_LABEL` dipakai di
-  halaman topup kredit. Boleh dikosongkan.
+- `ADMIN_WHATSAPP` (format 62…, tanpa `+`) dan `CREDIT_PRICE_LABEL` hanya nilai
+  **awal** untuk halaman topup — boleh dikosongkan. Selanjutnya ubah lewat
+  **/admin/settings** di browser; begitu disimpan di sana, nilai `.env` tidak
+  dipakai lagi.
 
 ## 3 — Secrets GitHub
 

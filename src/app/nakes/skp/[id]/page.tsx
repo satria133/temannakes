@@ -10,7 +10,7 @@ import {
   type SubmissionStatus,
 } from "@/lib/constants";
 import { canEditSubmission } from "@/lib/submission-input";
-import { adminWhatsappUrl } from "@/lib/topup";
+import { getTopupInfo } from "@/lib/topup";
 import { UNLOCK_ERROR_MESSAGES } from "@/lib/credits";
 import { unlockSubmissionAction } from "./actions";
 
@@ -36,7 +36,7 @@ export default async function SubmissionDetailPage({
   const canEdit = canEditSubmission(submission);
   const enoughCredits = account.credits >= CREDITS_PER_DOCUMENT;
   const error = typeof query?.error === "string" ? UNLOCK_ERROR_MESSAGES[query.error] ?? null : null;
-  const waUrl = adminWhatsappUrl(
+  const waUrl = (await getTopupInfo()).whatsappUrl(
     `Halo Admin TemanNakes, saya ${submission.fullName ?? submission.nakesProfile.fullName} ` +
       `(${account.email}) ingin membuka akses dokumen SKP ID ${submission.id}.`
   );

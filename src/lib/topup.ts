@@ -1,9 +1,11 @@
-export function adminWhatsappUrl(message: string): string | null {
-  const number = (process.env.ADMIN_WHATSAPP ?? "").replace(/\D/g, "");
-  if (!number) return null;
-  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
-}
+import { getSettings } from "@/lib/settings";
 
-export function creditPriceLabel(): string | null {
-  return process.env.CREDIT_PRICE_LABEL?.trim() || null;
+export async function getTopupInfo() {
+  const { adminWhatsapp, creditPriceLabel } = await getSettings();
+  const number = adminWhatsapp.replace(/\D/g, "");
+  return {
+    priceLabel: creditPriceLabel || null,
+    whatsappUrl: (message: string) =>
+      number ? `https://wa.me/${number}?text=${encodeURIComponent(message)}` : null,
+  };
 }

@@ -190,6 +190,15 @@ model JobPosting {
   createdAt   DateTime @default(now())
 }
 
+// Admin-editable app settings (e.g. topup WhatsApp number, price text).
+// Missing keys fall back to the matching env var — see src/lib/settings.ts.
+model Setting {
+  key         String   @id
+  value       String
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
 model Subscription {
   id        String   @id @default(cuid())
   userId    String
