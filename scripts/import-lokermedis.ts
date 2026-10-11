@@ -26,6 +26,38 @@ async function get(url: string) {
   return stdout;
 }
 
+// Hanya loker tenaga kesehatan. Sitemap/JSON-LD tidak punya field kategori,
+// jadi penyaringan berbasis judul: harus memuat profesi klinis (HEALTH) dan
+// tidak memuat penanda posisi non-klinis (NON_CLINICAL), mis. "Sales Consultant
+// Dental Clinic" ditolak walau ada kata dental.
+const HEALTH = [
+  "dokter", "doctor", "physician", "general practitioner", "dentist", "spesialis", "specialist",
+  "perawat", "nurse", "ners", "bidan", "midwife", "midwives", "apoteker", "pharmacist",
+  "asisten apoteker", "pharmacist assistant", "pharmacy assistant", "tenaga teknis kefarmasian",
+  "ttk", "atlm", "analis", "analyst", "radiografer", "radiographer", "radiolog", "fisioterapis",
+  "fisioterapi", "physiotherapist", "physiotherapy", "terapis okupasi", "occupational therapist",
+  "terapi wicara", "speech therapist", "ahli gizi", "nutrisionis", "dietisien", "dietitian",
+  "nutritionist", "psikolog", "psychologist", "sanitarian", "penata anestesi", "anestesi",
+  "perekam medis", "paramedis", "paramedic", "flebotomis", "phlebotomist", "tenaga kesehatan",
+  "nakes", "aba therapist", "terapis perilaku",
+];
+const NON_CLINICAL = [
+  "sales", "marketing", "akuntansi", "accounting", "tax", "finance", "keuangan", "ledger",
+  "content creator", "driver", "office boy", "security", "satpam", "maintenance", "mep",
+  "admin", "administrator", "administration", "front office", "front liner", "receptionist",
+  "kasir", "cashier", "purchasing", "procurement", "hrd", "legal", "programmer", "designer",
+  "insurance", "guarantee", "store leader", "reflexology", "massage", "body treatment",
+  "distribution", "warehouse", "gudang", "cleaning", "housekeeping", "chef", "unit head",
+];
+
+const norm = (t: string) => ` ${t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()} `;
+const hasWord = (t: string, w: string) => t.includes(` ${w} `);
+
+function isHealthJob(title: string) {
+  const t = norm(title);
+  return HEALTH.some((w) => hasWord(t, w)) && !NON_CLINICAL.some((w) => hasWord(t, w));
+}
+
 function parseJob(html: string) {
   for (const m of html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) {
     try {
@@ -44,13 +76,14 @@ async function main() {
   let urls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
   if (limit) urls = urls.slice(0, limit);
 
-  let added = 0, skipped = 0, expired = 0, failed = 0;
+  let added = 0, skipped = 0, expired = 0, failed = 0, nonHealth = 0;
   for (const url of urls) {
     if (await prisma.jobPosting.findFirst({ where: { applyLink: url } })) { skipped++; continue; }
     try {
       const j = parseJob(await get(url));
       await sleep(400);
       if (!j) { failed++; continue; }
+      if (!isHealthJob(String(j.title))) { nonHealth++; continue; }
       const expiresAt = new Date(j.validThrough);
       if (isNaN(+expiresAt) || expiresAt < new Date()) { expired++; continue; }
       const addr = j.jobLocation?.address ?? {};
@@ -72,7 +105,7 @@ async function main() {
       console.error(String(e));
     }
   }
-  console.log({ total: urls.length, added, skipped, expired, failed, dry });
+  console.log({ total: urls.length, added, skipped, expired, nonHealth, failed, dry });
 }
 
 main().finally(() => prisma.$disconnect());
