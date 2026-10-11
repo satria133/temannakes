@@ -1,0 +1,17 @@
+# Copy to /opt/unspsc-app/docker-compose.override.yml on the VPS (NOT into the
+# UNSPSC-App git repo). Docker Compose merges it automatically, so the UNSPSC
+# docker-compose.yml and Caddyfile stay untouched.
+services:
+  caddy:
+    command: caddy run --config /etc/caddy/extra/Caddyfile.all --adapter caddyfile
+    volumes:
+      # Directory mount (not single files) so redeploys that replace these
+      # files are picked up after `docker compose restart caddy`.
+      - /opt/temannakes/deploy/caddy:/etc/caddy/extra:ro
+    networks:
+      - default
+      - web
+
+networks:
+  web:
+    external: true

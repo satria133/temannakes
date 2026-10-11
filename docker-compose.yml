@@ -1,0 +1,36 @@
+services:
+  temannakes:
+    build: .
+    # On the VPS, `docker compose pull` fetches this image from GHCR (built and
+    # pushed by .github/workflows/deploy.yml), then `docker compose up -d`.
+    image: ghcr.io/satria133/temannakes:latest
+    container_name: temannakes
+    ports:
+      # Localhost only: public traffic reaches the app through the UNSPSC
+      # Caddy container over the shared `web` network (see DEPLOY.md).
+      - "127.0.0.1:3001:3000"
+    environment:
+      AUTH_SECRET: ${AUTH_SECRET:?set a random AUTH_SECRET before deploying}
+      AUTH_URL: ${AUTH_URL:-https://temannakes.aisatira.web.id}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@temannakes.id}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:?set SEED_ADMIN_PASSWORD}
+      ADMIN_WHATSAPP: ${ADMIN_WHATSAPP:-}
+      CREDIT_PRICE_LABEL: ${CREDIT_PRICE_LABEL:-}
+      NODE_OPTIONS: "--max-old-space-size=384"
+    volumes:
+      # SQLite DB + uploaded letterheads/evidence. Survives image updates.
+      - temannakes_data:/app/data
+    # The droplet is shared with UNSPSC-App; cap memory so neither app can
+    # starve the other.
+    mem_limit: 512m
+    restart: unless-stopped
+    networks:
+      - default
+      - web
+
+volumes:
+  temannakes_data:
+
+networks:
+  web:
+    external: true

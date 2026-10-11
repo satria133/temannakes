@@ -1,0 +1,6 @@
+temannakes.aisatira.web.id {
+    request_body {
+        max_size 20MB
+    }
+    reverse_proxy temannakes:3000
+}

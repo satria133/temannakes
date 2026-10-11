@@ -1,0 +1,4 @@
+# Entry point for the UNSPSC Caddy container (see deploy/unspsc-compose.override.yml).
+# Loads UNSPSC's own Caddyfile unchanged, then the TemanNakes site.
+import /etc/caddy/Caddyfile
+import /etc/caddy/extra/temannakes.caddy
