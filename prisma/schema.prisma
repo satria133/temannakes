@@ -20,6 +20,7 @@ model User {
   passwordHash String
   role         String   @default("NAKES") // NAKES | ADMIN
   isActive     Boolean  @default(true)
+  credits      Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -29,6 +30,25 @@ model User {
   reviewedSubmissions ServiceSubmission[] @relation("SubmissionReviewedBy")
   subscriptions       Subscription[]
   institutionsAdded   Institution[]       @relation("InstitutionAddedBy")
+  creditTransactions  CreditTransaction[] @relation("CreditOwner")
+  creditGrants        CreditTransaction[] @relation("CreditGrantedBy")
+}
+
+// Ledger of every credit change: positive = topup by admin, negative = a
+// document unlocked by the nakes. User.credits is the running balance.
+model CreditTransaction {
+  id           String             @id @default(cuid())
+  userId       String
+  user         User               @relation("CreditOwner", fields: [userId], references: [id], onDelete: Cascade)
+  amount       Int
+  note         String?
+  submissionId String?
+  submission   ServiceSubmission? @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+  createdById  String?
+  createdBy    User?              @relation("CreditGrantedBy", fields: [createdById], references: [id])
+  createdAt    DateTime           @default(now())
+
+  @@index([userId])
 }
 
 model NakesProfile {
@@ -90,6 +110,23 @@ model ServiceSubmission {
   periodEnd      DateTime
   periodMonths   Int          // 6 or 12
 
+  // Identity printed on this document, copied from the profile when created
+  // and editable per document, so later profile edits don't alter old PDFs.
+  // Nullable only for rows created before these fields existed.
+  fullName       String?
+  strNumber      String?
+  sipNumber      String?
+  sipValidUntil  DateTime?
+  position       String?
+  employeeNip    String?
+  supervisorName String?
+  supervisorNip  String?
+  city           String?
+
+  // Set when the nakes spends credits (or an admin grants access); unlocks
+  // clean PDF download and editing after submission.
+  unlockedAt     DateTime?
+
   status         String       @default("DRAFT") // DRAFT | SUBMITTED | APPROVED | REJECTED
   adminNote      String?
   reviewedById   String?
@@ -99,8 +136,9 @@ model ServiceSubmission {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
-  entries        ServiceEntry[]
-  evidenceFiles  EvidenceFile[]
+  entries            ServiceEntry[]
+  evidenceFiles      EvidenceFile[]
+  creditTransactions CreditTransaction[]
 }
 
 model ServiceEntry {

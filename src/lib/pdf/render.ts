@@ -4,7 +4,7 @@ import path from "path";
 import { readFile } from "fs/promises";
 import { prisma } from "@/lib/prisma";
 import { resolveStoredFile } from "@/lib/storage";
-import { PROFESSION_LABELS, MONTH_LABELS, type Profession } from "@/lib/constants";
+import { MONTH_LABELS, professionLabel } from "@/lib/constants";
 import { SubmissionPdfDocument, type PdfData } from "./template";
 
 async function toDataUrl(fileUrl: string): Promise<string | undefined> {
@@ -20,13 +20,15 @@ async function toDataUrl(fileUrl: string): Promise<string | undefined> {
   }
 }
 
-export async function renderSubmissionPdf(submissionId: string): Promise<Buffer> {
+export async function renderSubmissionPdf(
+  submissionId: string,
+  options: { watermark: boolean }
+): Promise<Buffer> {
   const submission = await prisma.serviceSubmission.findUniqueOrThrow({
     where: { id: submissionId },
     include: {
       nakesProfile: true,
       institution: true,
-      reviewedBy: true,
       entries: { include: { activityTemplate: true } },
     },
   });
@@ -79,27 +81,40 @@ export async function renderSubmissionPdf(submissionId: string): Promise<Buffer>
     MONTH_LABELS[months[months.length - 1].month - 1]
   } ${months[months.length - 1].year}`;
 
+  // Rows created before per-document identity existed fall back to the profile.
+  const profile = submission.nakesProfile;
+  const sipValidUntil = submission.sipValidUntil ?? profile.sipValidUntil;
+
   const data: PdfData = {
-    professionLabel:
-      PROFESSION_LABELS[submission.profession as Profession] ?? submission.profession,
+    professionLabel: professionLabel(submission.profession),
     letterheadUrl,
     institutionName: submission.institution.name,
-    fullName: submission.nakesProfile.fullName,
-    strNumber: submission.nakesProfile.strNumber,
-    sipNumber: submission.nakesProfile.sipNumber,
-    sipValidUntil: submission.nakesProfile.sipValidUntil.toLocaleDateString("id-ID"),
-    position: submission.nakesProfile.position,
+    fullName: submission.fullName ?? profile.fullName,
+    strNumber: submission.strNumber ?? profile.strNumber,
+    sipNumber: submission.sipNumber ?? profile.sipNumber,
+    sipValidUntil: sipValidUntil.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    }),
+    position: submission.position ?? profile.position,
+    employeeNip: submission.employeeNip ?? undefined,
+    supervisorName: submission.supervisorName ?? undefined,
+    supervisorNip: submission.supervisorNip ?? undefined,
     periodLabel,
     months,
     rows,
     columnTotals,
     grandTotal,
-    approvedByName: submission.reviewedBy?.email,
-    location: submission.institution.name,
-    issuedDateLabel: (submission.reviewedAt ?? new Date()).toLocaleDateString(
-      "id-ID",
-      { day: "numeric", month: "long", year: "numeric" }
-    ),
+    city: submission.city ?? undefined,
+    issuedDateLabel: (submission.reviewedAt ?? new Date()).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "Asia/Jakarta",
+    }),
+    watermark: options.watermark ? "PRATINJAU — TemanNakes" : undefined,
   };
 
   const element = createElement(SubmissionPdfDocument, { data });

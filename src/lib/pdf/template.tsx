@@ -56,6 +56,23 @@ const styles = StyleSheet.create({
   signatureRow: { flexDirection: "row", marginTop: 40, justifyContent: "space-between" },
   signatureBlock: { width: "45%", textAlign: "center" },
   signatureSpace: { height: 50 },
+  signatureName: { textDecoration: "underline", fontFamily: "Helvetica-Bold" },
+  watermarkLayer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  watermarkText: {
+    fontSize: 56,
+    fontFamily: "Helvetica-Bold",
+    color: "#137f87",
+    opacity: 0.18,
+    transform: "rotate(-25deg)",
+  },
 });
 
 export type PdfActivityRow = {
@@ -78,10 +95,12 @@ export type PdfData = {
   rows: PdfActivityRow[];
   columnTotals: number[];
   grandTotal: number;
-  approvedByName?: string;
-  approvedAt?: string;
-  location: string;
+  employeeNip?: string;
+  supervisorName?: string;
+  supervisorNip?: string;
+  city?: string;
   issuedDateLabel: string;
+  watermark?: string;
 };
 
 export function SubmissionPdfDocument({ data }: { data: PdfData }) {
@@ -142,29 +161,41 @@ export function SubmissionPdfDocument({ data }: { data: PdfData }) {
           </View>
         </View>
 
-        <View style={styles.signatureRow}>
+        <View style={styles.signatureRow} wrap={false}>
           <View style={styles.signatureBlock}>
+            <Text> </Text>
             <Text>Mengetahui</Text>
             <Text>PIMPINAN / ATASAN</Text>
             <Text>{data.institutionName}</Text>
             <View style={styles.signatureSpace} />
-            <Text style={{ textDecoration: "underline" }}>
-              {data.approvedByName ?? "____________________"}
+            <Text style={styles.signatureName}>
+              {data.supervisorName ?? "____________________"}
             </Text>
-            <Text>Admin TemanNakes</Text>
+            {data.supervisorNip && <Text>NIP. {data.supervisorNip}</Text>}
           </View>
           <View style={styles.signatureBlock}>
             <Text>
-              {data.location}, {data.issuedDateLabel}
+              {data.city ? `${data.city}, ` : ""}
+              {data.issuedDateLabel}
             </Text>
             <Text>{data.professionLabel}</Text>
+            <Text>{data.institutionName}</Text>
+            <Text> </Text>
             <View style={styles.signatureSpace} />
-            <Text style={{ textDecoration: "underline" }}>
-              {data.fullName}
-            </Text>
-            <Text>No. STR: {data.strNumber}</Text>
+            <Text style={styles.signatureName}>{data.fullName}</Text>
+            {data.employeeNip && <Text>NIP. {data.employeeNip}</Text>}
           </View>
         </View>
+
+        {data.watermark && (
+          <View style={styles.watermarkLayer} fixed>
+            {[0, 1, 2].map((i) => (
+              <Text key={i} style={styles.watermarkText}>
+                {data.watermark}
+              </Text>
+            ))}
+          </View>
+        )}
       </Page>
     </Document>
   );

@@ -1,15 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { LEGACY_PROFESSION_CODES, PROFESSIONS } from "../src/lib/constants";
 
 const prisma = new PrismaClient();
 
-// Activity templates mirror the categories found in the sample
-// "Rekapitulasi Kegiatan Praktik Profesi/Pelayanan" PDFs for each profession.
-const ACTIVITY_TEMPLATES: Record<
-  string,
-  { group?: string; name: string }[]
-> = {
-  TTLM: [
+// Defaults per profession. Nakes can still add their own rows per document.
+// ATLM/Perawat/Vokasi Farmasi/Apoteker/Dokter follow the sample
+// "Rekapitulasi Kegiatan Praktik Profesi" templates in docs/reference.
+const ACTIVITY_TEMPLATES: Record<string, { group?: string; name: string }[]> = {
+  ATLM: [
     { group: "Pra Analitik", name: "Sampling Darah, Swab" },
     { group: "Analitik", name: "Pemeriksaan Hema, KK, Urin, Faeces, Mikrobiologi, Imser, PCR" },
     { group: "Pasca Analitik", name: "Pencatatan dan Pelaporan, Verifikasi dan Validasi Hasil" },
@@ -27,7 +26,27 @@ const ACTIVITY_TEMPLATES: Record<
     { name: "Nebulizer" },
     { name: "Pemasangan Spalk Dewasa (Fraktur)" },
   ],
-  TENAGA_VOKASI_FARMASI: [
+  DOKTER: [
+    { name: "Pemeriksaan Pasien Rawat Jalan" },
+    { name: "Pelayanan Pasien IGD" },
+    { name: "Pelayanan Rawat Inap" },
+    { name: "Tindakan Hecting" },
+    { name: "Membaca Rontgen" },
+    { name: "Membaca EKG" },
+    { name: "Melakukan Injeksi" },
+    { name: "Nebulizer" },
+    { name: "Pasang Infus" },
+    { name: "Pelayanan USG Ibu Hamil" },
+  ],
+  DOKTER_GIGI: [
+    { name: "Pemeriksaan Gigi dan Mulut" },
+    { name: "Penambalan Gigi" },
+    { name: "Pencabutan Gigi" },
+    { name: "Perawatan Saluran Akar" },
+    { name: "Scaling / Pembersihan Karang Gigi" },
+    { name: "Penyuluhan Kesehatan Gigi dan Mulut" },
+  ],
+  VOKASI_FARMASI: [
     { group: "Administrasi Keprofesian", name: "Melakukan penerimaan obat" },
     { group: "Administrasi Keprofesian", name: "Melakukan penyimpanan obat" },
     { group: "Administrasi Keprofesian", name: "Stok opname" },
@@ -42,43 +61,66 @@ const ACTIVITY_TEMPLATES: Record<
     { group: "Pelayanan Pemeriksaan Keprofesian", name: "Pelayanan Resep" },
     { group: "Pelayanan Pemeriksaan Keprofesian", name: "Asuhan Kefarmasian (khusus RS)" },
   ],
-  DOKTER_UMUM: [
-    { name: "Pemeriksaan Pasien" },
-    { name: "Tindakan Hecting" },
-    { name: "Membaca Rontgen" },
-    { name: "Membaca EKG" },
-    { name: "Melakukan Injeksi" },
-    { name: "Nebulizer" },
-    { name: "Pasang Infus" },
-    { name: "Pemeriksaan Pasien Rawat Jalan" },
-    { name: "Pelayanan USG Ibu Hamil" },
-    { name: "Pelayanan Pasien IGD" },
-    { name: "Pelayanan Rawat Inap" },
+  RADIOLOGI: [
+    { name: "Pemeriksaan Radiografi Konvensional (Thorax, Ekstremitas, dll)" },
+    { name: "Pemeriksaan Radiografi dengan Kontras" },
+    { name: "Pemeriksaan CT Scan" },
+    { name: "Pemeriksaan USG (asistensi)" },
+    { name: "Pengolahan dan Dokumentasi Citra" },
   ],
-  BIDAN: [
-    { name: "Memberikan Pelayanan pada Ibu Hamil" },
-    { name: "Memberikan Pelayanan pada Ibu Bersalin" },
-    { name: "Memberikan Pelayanan pada BBL" },
-    { name: "Memberikan Pelayanan pada Ibu Nifas" },
-    { name: "Memberikan Pelayanan Imunisasi" },
-    { name: "Memberikan Pelayanan Keluarga Berencana" },
-    { name: "Memberikan Pelayanan Kesehatan Reproduksi" },
+  PSIKOLOG_KLINIS: [
+    { name: "Asesmen / Pemeriksaan Psikologis" },
+    { name: "Konseling Individu" },
+    { name: "Psikoterapi" },
+    { name: "Tes Psikologi" },
+    { name: "Psikoedukasi Kelompok" },
   ],
-  LAINNYA: [],
+  FISIOTERAPI: [
+    { name: "Asesmen Fisioterapi" },
+    { name: "Terapi Latihan" },
+    { name: "Elektroterapi" },
+    { name: "Terapi Manual" },
+    { name: "Edukasi Pasien dan Keluarga" },
+  ],
+  GIZI: [
+    { name: "Asesmen / Skrining Gizi Pasien" },
+    { name: "Konseling Gizi" },
+    { name: "Penyusunan Diet / Asuhan Gizi Pasien Rawat Inap" },
+    { name: "Penyelenggaraan Makanan" },
+    { name: "Penyuluhan Gizi" },
+  ],
 };
+
+async function migrateLegacyProfessionCodes() {
+  for (const [oldCode, newCode] of Object.entries(LEGACY_PROFESSION_CODES)) {
+    await prisma.nakesProfile.updateMany({ where: { profession: oldCode }, data: { profession: newCode } });
+    await prisma.serviceSubmission.updateMany({ where: { profession: oldCode }, data: { profession: newCode } });
+    await prisma.activityTemplate.updateMany({ where: { profession: oldCode }, data: { profession: newCode } });
+  }
+  // Professions dropped from the list keep their data but stop offering defaults.
+  await prisma.activityTemplate.updateMany({
+    where: { profession: { notIn: [...PROFESSIONS] } },
+    data: { isActive: false },
+  });
+}
 
 async function main() {
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@temannakes.id";
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "AdminTemanNakes123";
 
-  const passwordHash = await bcrypt.hash(adminPassword, 10);
-  const admin = await prisma.user.upsert({
-    where: { email: adminEmail },
-    create: { email: adminEmail, passwordHash, role: "ADMIN" },
-    update: {},
-  });
+  const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
+  if (!existingAdmin) {
+    await prisma.user.create({
+      data: {
+        email: adminEmail,
+        passwordHash: await bcrypt.hash(adminPassword, 10),
+        role: "ADMIN",
+      },
+    });
+    console.log(`Admin created: ${adminEmail}`);
+  }
 
-  console.log(`Admin ready: ${adminEmail} / ${adminPassword}`);
+  await migrateLegacyProfessionCodes();
 
   for (const [profession, activities] of Object.entries(ACTIVITY_TEMPLATES)) {
     for (const [index, activity] of activities.entries()) {
@@ -98,8 +140,7 @@ async function main() {
     }
   }
 
-  console.log("Seeded activity templates for", Object.keys(ACTIVITY_TEMPLATES).length, "professions");
-  void admin;
+  console.log("Seed done");
 }
 
 main()

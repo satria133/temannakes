@@ -4,6 +4,7 @@ import "./globals.css";
 import { auth, signOut } from "@/auth";
 import Link from "next/link";
 import Image from "next/image";
+import { prisma } from "@/lib/prisma";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,6 +24,11 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const session = await auth();
+  const credits =
+    session?.user?.role === "NAKES"
+      ? (await prisma.user.findUnique({ where: { id: session.user.id }, select: { credits: true } }))
+          ?.credits ?? 0
+      : null;
 
   return (
     <html
@@ -50,6 +56,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               <Link href="/jobs" className="hover:text-brand-600">Loker Medis</Link>
               {session?.user?.role === "NAKES" && (
                 <Link href="/nakes/skp" className="hover:text-brand-600">SKP Saya</Link>
+              )}
+              {credits !== null && (
+                <Link
+                  href="/nakes/topup"
+                  className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700 hover:bg-brand-100"
+                >
+                  {credits} kredit
+                </Link>
               )}
               {session?.user?.role === "ADMIN" && (
                 <Link href="/admin/submissions" className="hover:text-brand-600">Admin</Link>

@@ -17,8 +17,11 @@ export default async function AdminSubmissionsPage({
     typeof params?.status === "string" ? params.status : "SUBMITTED";
 
   const submissions = await prisma.serviceSubmission.findMany({
-    where: statusFilter === "ALL" ? {} : { status: statusFilter },
-    orderBy: { createdAt: "asc" },
+    where:
+      statusFilter === "ALL" || statusFilter === "DRAFT"
+        ? { status: { not: "DRAFT" } }
+        : { status: statusFilter },
+    orderBy: { updatedAt: "asc" },
     include: { nakesProfile: true, institution: true },
   });
 
@@ -51,7 +54,7 @@ export default async function AdminSubmissionsPage({
             >
               <div className="flex items-center justify-between">
                 <span className="font-medium">
-                  {s.nakesProfile.fullName} —{" "}
+                  {s.fullName ?? s.nakesProfile.fullName} —{" "}
                   {PROFESSION_LABELS[s.profession as Profession] ?? s.profession}
                 </span>
                 <span className="text-xs text-zinc-500">

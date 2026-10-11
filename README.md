@@ -33,9 +33,21 @@ Nakes mendaftar sendiri lewat halaman `/register`.
 
 ## Struktur fitur
 
-- `/nakes/profile` — lengkapi data profesional.
-- `/nakes/skp` — riwayat pengajuan SKP, `/nakes/skp/new` untuk mengajukan baru.
-- `/admin/submissions` — review & approve/reject pengajuan SKP.
+- `/nakes/profile` — data profesional default (10 profesi: ATLM, Perawat, Dokter,
+  Dokter Gigi, Vokasi Farmasi, Apoteker, Radiologi, Psikolog Klinis, Fisioterapi, Gizi).
+- `/nakes/skp/new` — buat dokumen: profesi, identitas (nama, STR, SIP, jabatan, NIP
+  opsional), instansi/kop surat, atasan (+ NIP opsional), tabel kegiatan, bukti.
+  Bisa **Simpan Draft** dulu.
+- `/nakes/skp/[id]` — pratinjau PDF ber-watermark (selalu gratis), buka akses dengan
+  kredit, unduh PDF bersih (setelah disetujui), edit berkas.
+- `/nakes/topup` — saldo kredit, cara topup (WhatsApp admin), riwayat transaksi.
+- `/admin/submissions` — review & approve/reject pengajuan SKP, pratinjau PDF, buka
+  akses gratis.
+- `/admin/users` — tambah/koreksi kredit nakes setelah pembayaran topup.
+
+Aturan akses dokumen: draft bebas diedit; setelah diajukan, edit dan unduh PDF
+bersih butuh akses terbuka (1 kredit per dokumen, atau dibuka admin). Edit setelah
+diajukan/disetujui mengembalikan dokumen ke antrean review.
 - `/admin/webinars`, `/admin/jobs` — kelola info webinar & loker.
 - `/webinars`, `/jobs` — listing publik (webinar H-7 di-highlight), bisa
   berlangganan jika sudah login.
