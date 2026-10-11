@@ -6,8 +6,8 @@ services:
     image: ghcr.io/satria133/temannakes:latest
     container_name: temannakes
     ports:
-      # Localhost only: public traffic reaches the app through the UNSPSC
-      # Caddy container over the shared `web` network (see DEPLOY.md).
+      # Localhost only: public traffic arrives through the host nginx
+      # (deploy/nginx/temannakes.conf), which also terminates HTTPS.
       - "127.0.0.1:3001:3000"
     environment:
       AUTH_SECRET: ${AUTH_SECRET:?set a random AUTH_SECRET before deploying}
@@ -24,13 +24,6 @@ services:
     # starve the other.
     mem_limit: 512m
     restart: unless-stopped
-    networks:
-      - default
-      - web
 
 volumes:
   temannakes_data:
-
-networks:
-  web:
-    external: true
