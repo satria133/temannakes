@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 import { JobForm } from "./job-form";
 import { DeleteJobButton } from "./delete-button";
+import { ImportLokermedis } from "./import-lokermedis";
 
 export default async function AdminJobsPage() {
   await requireAdmin();
@@ -14,6 +15,9 @@ export default async function AdminJobsPage() {
       <h1 className="text-xl font-semibold">Kelola Loker Medis</h1>
       <div className="mt-4">
         <JobForm />
+      </div>
+      <div className="mt-4">
+        <ImportLokermedis />
       </div>
       <ul className="mt-6 space-y-2">
         {jobs.map((j) => (
