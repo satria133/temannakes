@@ -39,6 +39,14 @@ export async function GET(
     if (evidence?.submission.nakesProfile.userId !== session.user.id) {
       return new Response("Not found", { status: 404 });
     }
+  } else if (segments[0] === "topup") {
+    // Bukti transfer: hanya pemilik permintaan dan admin.
+    if (session.user.role !== "ADMIN") {
+      const req = await prisma.topupRequest.findFirst({ where: { proofUrl: url }, select: { userId: true } });
+      if (req?.userId !== session.user.id) {
+        return new Response("Not found", { status: 404 });
+      }
+    }
   } else if (segments[0] !== "evidence" && segments[0] !== "institutions") {
     return new Response("Not found", { status: 404 });
   }

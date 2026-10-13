@@ -2,9 +2,11 @@ import Link from "next/link";
 
 const LINKS = [
   { href: "/admin/submissions", label: "Review SKP" },
+  { href: "/admin/topups", label: "Topup" },
   { href: "/admin/users", label: "Pengguna & Kredit" },
   { href: "/admin/webinars", label: "Webinar" },
   { href: "/admin/jobs", label: "Loker Medis" },
+  { href: "/admin/analytics", label: "Analitik" },
   { href: "/admin/settings", label: "Pengaturan" },
 ];
 

@@ -5,6 +5,7 @@ import { auth, signOut } from "@/auth";
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import { PageViewTracker } from "@/components/page-view-tracker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -94,6 +95,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           </div>
         </header>
         <main className="flex-1">{children}</main>
+        <PageViewTracker />
         <footer className="border-t bg-white py-6 text-center text-xs text-navy-500">
           TemanNakes — teman bertumbuh, profesional berkembang
         </footer>

@@ -10,6 +10,12 @@ export default async function AdminHomePage() {
         <Link href="/admin/submissions" className="rounded-lg border bg-white p-4 hover:shadow-sm">
           Review Dokumen SKP
         </Link>
+        <Link href="/admin/topups" className="rounded-lg border bg-white p-4 hover:shadow-sm">
+          Verifikasi Topup
+        </Link>
+        <Link href="/admin/analytics" className="rounded-lg border bg-white p-4 hover:shadow-sm">
+          Analitik Pengunjung
+        </Link>
         <Link href="/admin/users" className="rounded-lg border bg-white p-4 hover:shadow-sm">
           Pengguna &amp; Kredit
         </Link>

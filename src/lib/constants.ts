@@ -41,6 +41,17 @@ export function professionLabel(code: string): string {
 
 export const CREDITS_PER_DOCUMENT = 1;
 
+// Pilihan jumlah kredit pada form topup dan batas permintaan tertunda per pengguna.
+export const TOPUP_PACKAGES = [1, 3, 5, 10, 20] as const;
+export const MAX_PENDING_TOPUPS = 3;
+export const TOPUP_PROOF_MAX_BYTES = 5 * 1024 * 1024;
+
+export const TOPUP_STATUS_LABELS: Record<string, string> = {
+  PENDING: "Menunggu verifikasi",
+  APPROVED: "Disetujui",
+  REJECTED: "Ditolak",
+};
+
 export const SUBMISSION_STATUSES = [
   "DRAFT",
   "SUBMITTED",
