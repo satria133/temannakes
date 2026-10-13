@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 import { grantCredits } from "@/lib/credits";
+import { createResetToken } from "@/lib/password-reset";
+import { appBaseUrl } from "@/lib/app-url";
 
 const schema = z.object({
   userId: z.string().min(1),
@@ -35,4 +37,16 @@ export async function grantCreditsAction(_prev: GrantState, formData: FormData):
   await grantCredits(admin.id, userId, amount, note || null);
   revalidatePath("/admin/users");
   return { ok: `${amount > 0 ? "+" : ""}${amount} kredit untuk ${target.email}` };
+}
+
+export type ResetLinkState = { error?: string; url?: string } | undefined;
+
+// Tautan reset sekali pakai (berlaku 1 jam) untuk dikirim admin ke nakes lewat WhatsApp.
+// Membuat tautan baru membatalkan tautan lama milik nakes tersebut.
+export async function createResetLinkAction(userId: string): Promise<ResetLinkState> {
+  const admin = await requireAdmin();
+  const target = await prisma.user.findUnique({ where: { id: userId } });
+  if (!target || target.role !== "NAKES" || !target.isActive) return { error: "Pengguna tidak ditemukan." };
+  const token = await createResetToken(target.id, admin.id);
+  return { url: `${await appBaseUrl()}/reset-password?token=${token}` };
 }

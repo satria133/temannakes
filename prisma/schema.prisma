@@ -34,6 +34,7 @@ model User {
   creditGrants        CreditTransaction[] @relation("CreditGrantedBy")
   topupRequests       TopupRequest[]      @relation("TopupOwner")
   topupReviews        TopupRequest[]      @relation("TopupReviewedBy")
+  passwordResetTokens PasswordResetToken[]
 }
 
 // Ledger of every credit change: positive = topup by admin, negative = a
@@ -245,4 +246,19 @@ model PageView {
 
   @@index([day])
   @@index([path])
+}
+
+// Token reset password sekali pakai. Hanya hash SHA-256 yang disimpan (token asli
+// hanya ada di tautan), berlaku 1 jam. createdById terisi bila dibuat oleh admin.
+model PasswordResetToken {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdById String?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
 }

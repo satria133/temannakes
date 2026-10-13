@@ -37,6 +37,10 @@ Baca `node_modules/next/dist/docs/` sebelum memakai API Next.js. Yang sudah kena
   admin/api/files & bot tidak dihitung; segmen ID dinamis diganti `:id`. Butuh `X-Forwarded-For` dari nginx.
 - Loker: `/jobs` punya pencarian + filter profesi/provinsi + paginasi (`src/lib/job-filters.ts`).
   Admin mengimpor loker nakes dari LokerMedis.id lewat tombol di `/admin/jobs` (`src/lib/lokermedis-import.ts`).
+- Reset password: token sekali pakai (`PasswordResetToken`, hanya hash SHA-256 disimpan, berlaku 1 jam,
+  token baru membatalkan yang lama; `src/lib/password-reset.ts`). Dua jalur: admin buat tautan di
+  `/admin/users` lalu kirim lewat WhatsApp, atau `/forgot-password` mengirim email bila `SMTP_URL` diisi
+  (respons selalu generik, maks 3 permintaan/jam/akun). Sesi JWT lama tidak dicabut saat password diganti.
 - Identitas di dokumen (nama, STR, SIP, jabatan, NIP, atasan) disimpan per `ServiceSubmission`,
   bukan dibaca dari profil, agar PDF lama tidak berubah saat profil diedit.
 - File upload disimpan di `UPLOAD_DIR` (bukan `public/`) dan hanya dilayani lewat
