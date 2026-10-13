@@ -12,7 +12,7 @@ export const FILE_URL_PREFIX = "/files/";
 
 export async function saveUploadedFile(
   file: File,
-  subdir: "institutions" | "evidence"
+  subdir: "institutions" | "evidence" | "topup"
 ): Promise<{ url: string; fileName: string }> {
   const bytes = Buffer.from(await file.arrayBuffer());
   const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");

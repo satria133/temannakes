@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 export const SETTINGS = {
   adminWhatsapp: { env: "ADMIN_WHATSAPP" },
   creditPriceLabel: { env: "CREDIT_PRICE_LABEL" },
+  bankInfo: { env: "BANK_INFO" },
 } as const;
 
 export type SettingKey = keyof typeof SETTINGS;

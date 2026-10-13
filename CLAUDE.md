@@ -28,6 +28,15 @@ Baca `node_modules/next/dist/docs/` sebelum memakai API Next.js. Yang sudah kena
 - Buka akses = 1 kredit (`CREDITS_PER_DOCUMENT`), dipotong atomik (`updateMany` dengan
   syarat saldo) supaya klik ganda tidak memotong dua kali. Setiap perubahan kredit dicatat di
   `CreditTransaction`. Admin bisa topup di `/admin/users` atau buka akses gratis per dokumen.
+- Topup: nakes kirim `TopupRequest` (jumlah kredit + bukti transfer JPG/PNG/WEBP/PDF ≤5MB, isi file
+  dicek, maks 3 PENDING). Admin setujui/tolak di `/admin/topups`; `approveTopup` (`src/lib/topup-requests.ts`)
+  atomik (`updateMany` status PENDING) dan mencatat `CreditTransaction`. Bukti disimpan di `topup/` dan
+  hanya dilayani ke pemilik & admin lewat `/files`. Info rekening: `bankInfo` di `/admin/settings`.
+- Analitik pengunjung: self-hosted, tanpa cookie (`PageView`, `src/lib/analytics.ts`, `/api/track`,
+  dasbor `/admin/analytics`). `visitorHash` = hash(IP+UA+hari) sehingga tidak bisa dilacak lintas hari;
+  admin/api/files & bot tidak dihitung; segmen ID dinamis diganti `:id`. Butuh `X-Forwarded-For` dari nginx.
+- Loker: `/jobs` punya pencarian + filter profesi/provinsi + paginasi (`src/lib/job-filters.ts`).
+  Admin mengimpor loker nakes dari LokerMedis.id lewat tombol di `/admin/jobs` (`src/lib/lokermedis-import.ts`).
 - Identitas di dokumen (nama, STR, SIP, jabatan, NIP, atasan) disimpan per `ServiceSubmission`,
   bukan dibaca dari profil, agar PDF lama tidak berubah saat profil diedit.
 - File upload disimpan di `UPLOAD_DIR` (bukan `public/`) dan hanya dilayani lewat

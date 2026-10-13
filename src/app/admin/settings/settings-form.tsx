@@ -3,7 +3,15 @@
 import { useActionState } from "react";
 import { saveSettingsAction, type SettingsState } from "./actions";
 
-export function SettingsForm({ adminWhatsapp, creditPriceLabel }: { adminWhatsapp: string; creditPriceLabel: string }) {
+export function SettingsForm({
+  adminWhatsapp,
+  creditPriceLabel,
+  bankInfo,
+}: {
+  adminWhatsapp: string;
+  creditPriceLabel: string;
+  bankInfo: string;
+}) {
   const [state, formAction, pending] = useActionState<SettingsState, FormData>(saveSettingsAction, undefined);
 
   return (
@@ -30,7 +38,20 @@ export function SettingsForm({ adminWhatsapp, creditPriceLabel }: { adminWhatsap
           className="input mt-1"
         />
         <p className="mt-1 text-xs text-zinc-500">
-          Hanya tampilan di halaman topup; pembayaran tetap dikonfirmasi manual oleh admin.
+          Hanya tampilan di halaman topup; pembayaran tetap diverifikasi manual oleh admin.
+        </p>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-navy-700">Info rekening / e-wallet tujuan transfer</label>
+        <textarea
+          name="bankInfo"
+          defaultValue={bankInfo}
+          rows={3}
+          placeholder={"BCA 1234567890 a.n. Nama\nDANA 08123456789"}
+          className="input mt-1"
+        />
+        <p className="mt-1 text-xs text-zinc-500">
+          Ditampilkan di halaman topup agar nakes bisa transfer lalu mengunggah bukti.
         </p>
       </div>
       {state?.error && <p className="text-sm text-red-600">{state.error}</p>}

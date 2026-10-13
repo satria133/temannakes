@@ -32,6 +32,8 @@ model User {
   institutionsAdded   Institution[]       @relation("InstitutionAddedBy")
   creditTransactions  CreditTransaction[] @relation("CreditOwner")
   creditGrants        CreditTransaction[] @relation("CreditGrantedBy")
+  topupRequests       TopupRequest[]      @relation("TopupOwner")
+  topupReviews        TopupRequest[]      @relation("TopupReviewedBy")
 }
 
 // Ledger of every credit change: positive = topup by admin, negative = a
@@ -207,4 +209,40 @@ model Subscription {
   createdAt DateTime @default(now())
 
   @@unique([userId, type])
+}
+
+// Permintaan topup kredit dengan bukti transfer; admin menyetujui/menolak.
+// Persetujuan menambah kredit + mencatat CreditTransaction secara atomik.
+model TopupRequest {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation("TopupOwner", fields: [userId], references: [id], onDelete: Cascade)
+  credits      Int
+  note         String?
+  proofUrl     String
+  proofName    String
+  status       String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  reviewNote   String?
+  reviewedById String?
+  reviewedBy   User?     @relation("TopupReviewedBy", fields: [reviewedById], references: [id])
+  reviewedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+// Analitik pengunjung tanpa cookie: visitorHash = hash(IP+UA+hari) yang berganti
+// tiap hari, jadi tidak bisa melacak orang lintas hari. `day` = YYYY-MM-DD (WIB).
+model PageView {
+  id          String   @id @default(cuid())
+  path        String
+  day         String
+  visitorHash String
+  referrer    String?
+  device      String   // mobile | desktop
+  createdAt   DateTime @default(now())
+
+  @@index([day])
+  @@index([path])
 }

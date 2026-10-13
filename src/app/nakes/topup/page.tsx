@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireNakes } from "@/lib/session";
-import { CREDITS_PER_DOCUMENT } from "@/lib/constants";
+import { CREDITS_PER_DOCUMENT, TOPUP_STATUS_LABELS } from "@/lib/constants";
+import { TopupForm } from "./topup-form";
 import { getTopupInfo } from "@/lib/topup";
 
 export default async function TopupPage() {
   const user = await requireNakes();
-  const [account, transactions] = await Promise.all([
+  const [account, transactions, requests] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: user.id },
       select: { email: true, credits: true, nakesProfile: { select: { fullName: true } } },
@@ -15,6 +16,11 @@ export default async function TopupPage() {
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: 30,
+    }),
+    prisma.topupRequest.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 10,
     }),
   ]);
 
@@ -37,28 +43,56 @@ export default async function TopupPage() {
 
       <div className="mt-4 rounded-lg border bg-white p-4 text-sm text-navy-700">
         <h2 className="font-semibold text-navy-800">Cara topup</h2>
-        <ul className="mt-2 list-disc space-y-1 pl-5">
+        <ol className="mt-2 list-decimal space-y-1 pl-5">
           <li>
             {CREDITS_PER_DOCUMENT} kredit membuka 1 dokumen: unduh PDF tanpa watermark dan edit berkas
-            kapan saja.
+            kapan saja. Pratinjau dengan watermark selalu gratis.
           </li>
           {price && <li>Harga: {price}.</li>}
-          <li>Pratinjau dengan watermark selalu gratis.</li>
-          <li>Hubungi admin, lakukan pembayaran, lalu admin menambahkan kredit ke akun {account.email}.</li>
-        </ul>
-        {waUrl ? (
-          <a
-            href={waUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-block rounded-md bg-brand-600 px-4 py-2 text-white hover:bg-brand-700"
-          >
-            Hubungi admin via WhatsApp
-          </a>
+          <li>Transfer sesuai jumlah kredit ke rekening di bawah.</li>
+          <li>Unggah bukti transfer pada form. Admin memverifikasi, lalu kredit masuk ke akun {account.email}.</li>
+        </ol>
+        {topup.bankInfo ? (
+          <pre className="mt-3 whitespace-pre-wrap rounded-md bg-navy-50 p-3 font-sans text-navy-800">{topup.bankInfo}</pre>
         ) : (
-          <p className="mt-4 text-zinc-500">Hubungi admin TemanNakes untuk topup kredit.</p>
+          <p className="mt-3 text-zinc-500">Info rekening belum diatur admin. Hubungi admin untuk detail pembayaran.</p>
+        )}
+        <TopupForm />
+        {waUrl && (
+          <p className="mt-4 text-xs text-zinc-500">
+            Ada kendala?{" "}
+            <a href={waUrl} target="_blank" rel="noopener noreferrer" className="text-brand-700 hover:underline">
+              Hubungi admin via WhatsApp
+            </a>
+          </p>
         )}
       </div>
+
+      {requests.length > 0 && (
+        <>
+          <h2 className="mt-8 font-semibold text-navy-800">Permintaan topup</h2>
+          <ul className="mt-2 divide-y rounded-lg border bg-white text-sm">
+            {requests.map((r) => (
+              <li key={r.id} className="flex items-center justify-between px-4 py-2">
+                <div>
+                  <p>{r.credits} kredit</p>
+                  <p className="text-xs text-zinc-500">
+                    {r.createdAt.toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}
+                    {r.status === "REJECTED" && r.reviewNote && ` · alasan: ${r.reviewNote}`}
+                  </p>
+                </div>
+                <span
+                  className={
+                    r.status === "APPROVED" ? "text-brand-700" : r.status === "REJECTED" ? "text-red-700" : "text-zinc-600"
+                  }
+                >
+                  {TOPUP_STATUS_LABELS[r.status] ?? r.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       <h2 className="mt-8 font-semibold text-navy-800">Riwayat</h2>
       <ul className="mt-2 divide-y rounded-lg border bg-white text-sm">
