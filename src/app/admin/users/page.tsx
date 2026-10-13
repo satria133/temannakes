@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 import { professionLabel } from "@/lib/constants";
 import { GrantForm } from "./grant-form";
+import { ResetLinkButton } from "./reset-link-button";
 
 export default async function AdminUsersPage({ searchParams }: PageProps<"/admin/users">) {
   await requireAdmin();
@@ -42,6 +43,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
               <th className="px-3 py-2">Profesi</th>
               <th className="px-3 py-2 text-right">Kredit</th>
               <th className="px-3 py-2">Tambah kredit</th>
+              <th className="px-3 py-2">Password</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -58,11 +60,14 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                 <td className="px-3 py-2">
                   <GrantForm userId={u.id} />
                 </td>
+                <td className="px-3 py-2">
+                  <ResetLinkButton userId={u.id} />
+                </td>
               </tr>
             ))}
             {users.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-3 py-4 text-center text-zinc-500">
+                <td colSpan={5} className="px-3 py-4 text-center text-zinc-500">
                   Tidak ada pengguna.
                 </td>
               </tr>

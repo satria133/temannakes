@@ -8,6 +8,7 @@ export default async function LoginPage({
 }: PageProps<"/login">) {
   const params = await searchParams;
   const registered = params?.registered === "1";
+  const passwordReset = params?.reset === "1";
   const error = typeof params?.error === "string" ? params.error : undefined;
   const callbackUrl =
     typeof params?.callbackUrl === "string" ? params.callbackUrl : "/";
@@ -34,6 +35,11 @@ export default async function LoginPage({
       {registered && (
         <p className="mt-2 text-sm text-brand-700">
           Pendaftaran berhasil, silakan masuk.
+        </p>
+      )}
+      {passwordReset && (
+        <p className="mt-2 text-sm text-brand-700">
+          Password berhasil diubah, silakan masuk dengan password baru.
         </p>
       )}
       <form action={login} className="mt-6 space-y-4">
@@ -66,6 +72,11 @@ export default async function LoginPage({
         </button>
       </form>
       <p className="mt-4 text-sm text-zinc-600">
+        <Link href="/forgot-password" className="text-brand-700">
+          Lupa password?
+        </Link>
+      </p>
+      <p className="mt-2 text-sm text-zinc-600">
         Belum punya akun?{" "}
         <Link href="/register" className="text-brand-700">
           Daftar
