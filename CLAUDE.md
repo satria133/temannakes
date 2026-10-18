@@ -49,6 +49,10 @@ Baca `node_modules/next/dist/docs/` sebelum memakai API Next.js. Yang sudah kena
 - Admin: `/admin/admins` (tambah, jadikan nakes admin, nonaktifkan, ganti email, tautan reset). Tidak boleh
   menonaktifkan diri sendiri / admin aktif terakhir. Tindakan sensitif dicatat di `AuditLog`
   (`src/lib/audit.ts`, dilihat di `/admin/audit`); tambah `logAudit` untuk tindakan admin baru.
+- Tampilan: fondasi di `src/app/globals.css` (token `brand-*`/`navy-*`/`accent-*`, kelas `.btn-primary`,
+  `.btn-secondary`, `.card`, `.badge`, `.input`; border bawaan sudah diset ke `navy-100`). Di Tailwind 4,
+  `@apply` tidak boleh memakai kelas komponen buatan sendiri; tulis utilitasnya langsung. Header responsif
+  `src/components/site-header.tsx`, footer `site-footer.tsx`, beranda `src/app/page.tsx` (loker terbaru dari DB).
 - Identitas di dokumen (nama, STR, SIP, jabatan, NIP, atasan) disimpan per `ServiceSubmission`,
   bukan dibaca dari profil, agar PDF lama tidak berubah saat profil diedit.
 - File upload disimpan di `UPLOAD_DIR` (bukan `public/`) dan hanya dilayani lewat

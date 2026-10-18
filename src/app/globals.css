@@ -33,13 +33,66 @@
   --color-navy-700: #123548;
   --color-navy-800: #0e2a3a;
   --color-navy-900: #0a1f2b;
+
+  /* Aksen hangat, hanya untuk sorotan kecil (badge, penanda). */
+  --color-accent-100: #fdf0cf;
+  --color-accent-500: #f2a900;
+  --color-accent-700: #9a6a00;
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* Tailwind 4: border bawaan = currentcolor (hitam). Samakan dengan palet. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop {
+    border-color: var(--color-navy-100);
+  }
+}
+
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-navy-900);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @layer components {
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-colors duration-150;
+  }
+  .btn-primary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-colors duration-150 bg-brand-600 text-white shadow-sm hover:bg-brand-700;
+  }
+  .btn-secondary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-colors duration-150 border border-navy-200 bg-white text-navy-800 hover:bg-navy-50;
+  }
+  .card {
+    @apply rounded-xl border border-navy-100 bg-white shadow-sm;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700;
+  }
+  .section-eyebrow {
+    @apply text-xs font-semibold uppercase tracking-wider text-brand-600;
+  }
+  .section-title {
+    @apply mt-2 text-2xl font-bold tracking-tight text-navy-800 sm:text-3xl;
+  }
   .input {
     @apply w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-brand-500 focus:outline-none;
   }
