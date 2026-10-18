@@ -105,7 +105,7 @@ export default async function JobsPage({ searchParams }: PageProps<"/jobs">) {
 
       <ul className="mt-3 space-y-3">
         {jobs.map((j) => (
-          <li key={j.id} className="rounded-lg border bg-white p-4">
+          <li key={j.id} className="card p-5">
             <h3 className="font-medium">{j.title}</h3>
             <p className="text-sm text-zinc-600">
               {j.institution} · {j.location}

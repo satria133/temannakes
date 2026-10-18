@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { auth, signOut } from "@/auth";
-import Link from "next/link";
-import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { PageViewTracker } from "@/components/page-view-tracker";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,9 +18,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TemanNakes",
-  description: "Platform SKP, dokumen profesi, webinar, dan loker untuk tenaga kesehatan",
+  title: { default: "TemanNakes — teman bertumbuh, profesional berkembang", template: "%s · TemanNakes" },
+  description:
+    "Kelola dokumen SKP dan rekapitulasi praktik profesi untuk STR/SIP, pantau webinar dan loker medis untuk tenaga kesehatan.",
   icons: { icon: "/logo.jpg" },
+  openGraph: {
+    title: "TemanNakes",
+    description: "Teman bertumbuh, profesional berkembang. SKP, webinar, dan loker medis untuk tenaga kesehatan.",
+    locale: "id_ID",
+    type: "website",
+    images: ["/logo.jpg"],
+  },
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -36,69 +44,18 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-navy-50/40 text-navy-900">
-        <header className="border-b bg-white">
-          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/logo.jpg"
-                alt="TemanNakes"
-                width={32}
-                height={32}
-                className="rounded-md object-cover"
-                priority
-              />
-              <span className="font-semibold text-navy-800">
-                Teman<span className="text-brand-600">Nakes</span>
-              </span>
-            </Link>
-            <nav className="flex items-center gap-4 text-sm text-navy-700">
-              <Link href="/webinars" className="hover:text-brand-600">Webinar</Link>
-              <Link href="/jobs" className="hover:text-brand-600">Loker Medis</Link>
-              {session?.user?.role === "NAKES" && (
-                <Link href="/nakes/skp" className="hover:text-brand-600">SKP Saya</Link>
-              )}
-              {credits !== null && (
-                <Link
-                  href="/nakes/topup"
-                  className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700 hover:bg-brand-100"
-                >
-                  {credits} kredit
-                </Link>
-              )}
-              {session?.user?.role === "ADMIN" && (
-                <Link href="/admin/submissions" className="hover:text-brand-600">Admin</Link>
-              )}
-              {session ? (
-                <form
-                  action={async () => {
-                    "use server";
-                    await signOut({ redirectTo: "/" });
-                  }}
-                >
-                  <button className="text-navy-600 hover:text-navy-900">
-                    Keluar
-                  </button>
-                </form>
-              ) : (
-                <>
-                  <Link href="/login" className="hover:text-brand-600">Masuk</Link>
-                  <Link
-                    href="/register"
-                    className="rounded-md bg-brand-600 px-3 py-1.5 text-white hover:bg-brand-700"
-                  >
-                    Daftar
-                  </Link>
-                </>
-              )}
-            </nav>
-          </div>
-        </header>
+      <body className="min-h-full flex flex-col bg-[#f6fafb] text-navy-900">
+        <SiteHeader
+          role={session?.user?.role ?? null}
+          credits={credits}
+          signOutAction={async () => {
+            "use server";
+            await signOut({ redirectTo: "/" });
+          }}
+        />
         <main className="flex-1">{children}</main>
         <PageViewTracker />
-        <footer className="border-t bg-white py-6 text-center text-xs text-navy-500">
-          TemanNakes — teman bertumbuh, profesional berkembang
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   );
