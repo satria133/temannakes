@@ -7,6 +7,8 @@ const LINKS = [
   { href: "/admin/webinars", label: "Webinar" },
   { href: "/admin/jobs", label: "Loker Medis" },
   { href: "/admin/analytics", label: "Analitik" },
+  { href: "/admin/admins", label: "Admin" },
+  { href: "/admin/audit", label: "Audit" },
   { href: "/admin/settings", label: "Pengaturan" },
 ];
 

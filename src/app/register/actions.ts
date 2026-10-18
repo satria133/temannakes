@@ -4,6 +4,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { emailVerificationRequired, sendVerificationEmail } from "@/lib/email-verification";
 
 const schema = z.object({
   email: z.string().email("Email tidak valid"),
@@ -33,9 +34,17 @@ export async function registerAction(
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: { email, passwordHash, role: "NAKES" },
   });
 
+  if (emailVerificationRequired()) {
+    try {
+      await sendVerificationEmail(user);
+    } catch (err) {
+      console.error("register: gagal mengirim email verifikasi", err);
+    }
+    redirect("/login?registered=verify");
+  }
   redirect("/login?registered=1");
 }

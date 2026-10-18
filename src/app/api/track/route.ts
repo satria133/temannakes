@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { clientIp } from "@/lib/client-ip";
 import { dayWIB, deviceFromUa, isBot, referrerHost, trackablePath, visitorHash } from "@/lib/analytics";
 
 const RETENTION_DAYS = 400;
@@ -17,10 +18,7 @@ export async function POST(request: Request) {
   const path = trackablePath(body.path);
   if (!path) return new Response(null, { status: 204 });
 
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "unknown";
+  const ip = clientIp(request.headers);
   const day = dayWIB();
 
   await prisma.pageView.create({

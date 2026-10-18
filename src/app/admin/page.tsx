@@ -25,6 +25,12 @@ export default async function AdminHomePage() {
         <Link href="/admin/jobs" className="rounded-lg border bg-white p-4 hover:shadow-sm">
           Kelola Loker Medis
         </Link>
+        <Link href="/admin/admins" className="rounded-lg border bg-white p-4 hover:shadow-sm">
+          Kelola Admin
+        </Link>
+        <Link href="/admin/audit" className="rounded-lg border bg-white p-4 hover:shadow-sm">
+          Jejak Audit
+        </Link>
         <Link href="/admin/settings" className="rounded-lg border bg-white p-4 hover:shadow-sm">
           Pengaturan (WhatsApp &amp; harga)
         </Link>

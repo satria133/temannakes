@@ -41,6 +41,14 @@ Baca `node_modules/next/dist/docs/` sebelum memakai API Next.js. Yang sudah kena
   token baru membatalkan yang lama; `src/lib/password-reset.ts`). Dua jalur: admin buat tautan di
   `/admin/users` lalu kirim lewat WhatsApp, atau `/forgot-password` mengirim email bila `SMTP_URL` diisi
   (respons selalu generik, maks 3 permintaan/jam/akun). Sesi JWT lama tidak dicabut saat password diganti.
+- Keamanan akun: login dibatasi (`LoginAttempt`: 5 gagal/email+IP, 20/email, 30/IP per 15 mnt; IP dari
+  `X-Real-IP`, `src/lib/client-ip.ts`). Sesi JWT divalidasi ke DB tiap request (`src/auth.ts`):
+  `sessionVersion` naik saat password diganti/admin dinonaktifkan/email admin diganti, `isActive` dan `role`
+  dibaca dari DB. Verifikasi email WAJIB bagi nakes hanya bila `SMTP_URL` aktif; seed menandai akun lama
+  terverifikasi sekali saat SMTP pertama aktif. Tautan verifikasi butuh klik tombol (anti pemindai email).
+- Admin: `/admin/admins` (tambah, jadikan nakes admin, nonaktifkan, ganti email, tautan reset). Tidak boleh
+  menonaktifkan diri sendiri / admin aktif terakhir. Tindakan sensitif dicatat di `AuditLog`
+  (`src/lib/audit.ts`, dilihat di `/admin/audit`); tambah `logAudit` untuk tindakan admin baru.
 - Identitas di dokumen (nama, STR, SIP, jabatan, NIP, atasan) disimpan per `ServiceSubmission`,
   bukan dibaca dari profil, agar PDF lama tidak berubah saat profil diedit.
 - File upload disimpan di `UPLOAD_DIR` (bukan `public/`) dan hanya dilayani lewat
