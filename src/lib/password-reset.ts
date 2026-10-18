@@ -61,7 +61,16 @@ export async function resetPasswordWithToken(token: string, newPassword: string)
     });
     if (claimed.count === 0) return { ok: false, code: "invalid_token" };
 
-    await tx.user.update({ where: { id: row.userId }, data: { passwordHash } });
+    const owner = await tx.user.findUniqueOrThrow({ where: { id: row.userId }, select: { emailVerifiedAt: true } });
+    await tx.user.update({
+      where: { id: row.userId },
+      data: {
+        passwordHash,
+        sessionVersion: { increment: 1 }, // mencabut semua sesi lama
+        // Membuka tautan di inbox sendiri membuktikan kepemilikan email.
+        ...(owner.emailVerifiedAt ? {} : { emailVerifiedAt: new Date() }),
+      },
+    });
     await tx.passwordResetToken.updateMany({
       where: { userId: row.userId, usedAt: null },
       data: { usedAt: new Date() },

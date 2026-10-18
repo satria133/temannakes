@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { LEGACY_PROFESSION_CODES, PROFESSIONS } from "../src/lib/constants";
+import { isMailConfigured } from "../src/lib/mailer";
 
 const prisma = new PrismaClient();
 
@@ -115,6 +116,7 @@ async function main() {
         email: adminEmail,
         passwordHash: await bcrypt.hash(adminPassword, 10),
         role: "ADMIN",
+        emailVerifiedAt: new Date(),
       },
     });
     console.log(`Admin created: ${adminEmail}`);
@@ -136,6 +138,29 @@ async function main() {
       });
       console.log(`Test nakes created: ${testEmail}`);
     }
+  }
+
+  // Saat SMTP pertama kali aktif, verifikasi email mulai diwajibkan. Akun yang sudah ada
+  // ditandai terverifikasi satu kali supaya tidak terkunci; hanya pendaftar baru yang wajib.
+  if (isMailConfigured()) {
+    const marker = await prisma.setting.findUnique({ where: { key: "emailVerificationStartedAt" } });
+    if (!marker) {
+      const r = await prisma.user.updateMany({
+        where: { emailVerifiedAt: null },
+        data: { emailVerifiedAt: new Date() },
+      });
+      await prisma.setting.create({
+        data: { key: "emailVerificationStartedAt", value: new Date().toISOString() },
+      });
+      console.log(`Verifikasi email aktif: ${r.count} akun lama ditandai terverifikasi`);
+    }
+  }
+
+  // Nomor WhatsApp admin awal (hanya bila belum diatur di panel maupun env).
+  const waSetting = await prisma.setting.findUnique({ where: { key: "adminWhatsapp" } });
+  if (!waSetting && !(process.env.ADMIN_WHATSAPP ?? "").trim()) {
+    await prisma.setting.create({ data: { key: "adminWhatsapp", value: "6281267872463" } });
+    console.log("Nomor WhatsApp admin awal diatur");
   }
 
   await migrateLegacyProfessionCodes();

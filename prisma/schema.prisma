@@ -21,6 +21,9 @@ model User {
   role         String   @default("NAKES") // NAKES | ADMIN
   isActive     Boolean  @default(true)
   credits      Int      @default(0)
+  // Naik tiap password diganti / akun dinonaktifkan agar sesi JWT lama langsung batal.
+  sessionVersion  Int       @default(0)
+  emailVerifiedAt DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -35,6 +38,7 @@ model User {
   topupRequests       TopupRequest[]      @relation("TopupOwner")
   topupReviews        TopupRequest[]      @relation("TopupReviewedBy")
   passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
 }
 
 // Ledger of every credit change: positive = topup by admin, negative = a
@@ -261,4 +265,43 @@ model PasswordResetToken {
   createdAt   DateTime  @default(now())
 
   @@index([userId])
+}
+
+// Token verifikasi email (hash saja, 24 jam, sekali pakai). Hanya dipakai bila SMTP aktif.
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// Percobaan login gagal untuk pembatasan (per email+IP, per email, per IP).
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([ip, createdAt])
+}
+
+// Jejak tindakan admin yang sensitif (uang, akses, akun, pengaturan).
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorEmail String
+  action     String
+  targetType String?
+  targetId   String?
+  detail     String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
 }

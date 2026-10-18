@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/session";
 import { grantCredits } from "@/lib/credits";
 import { createResetToken } from "@/lib/password-reset";
 import { appBaseUrl } from "@/lib/app-url";
+import { logAudit } from "@/lib/audit";
 
 const schema = z.object({
   userId: z.string().min(1),
@@ -35,6 +36,10 @@ export async function grantCreditsAction(_prev: GrantState, formData: FormData):
   if (target.credits + amount < 0) return { error: `Saldo tidak boleh minus (saldo: ${target.credits}).` };
 
   await grantCredits(admin.id, userId, amount, note || null);
+  await logAudit(admin, "credits.grant", {
+    targetType: "user", targetId: userId,
+    detail: `${target.email}: ${amount > 0 ? "+" : ""}${amount}${note ? ` (${note})` : ""}`,
+  });
   revalidatePath("/admin/users");
   return { ok: `${amount > 0 ? "+" : ""}${amount} kredit untuk ${target.email}` };
 }
@@ -48,5 +53,6 @@ export async function createResetLinkAction(userId: string): Promise<ResetLinkSt
   const target = await prisma.user.findUnique({ where: { id: userId } });
   if (!target || target.role !== "NAKES" || !target.isActive) return { error: "Pengguna tidak ditemukan." };
   const token = await createResetToken(target.id, admin.id);
+  await logAudit(admin, "user.reset_link", { targetType: "user", targetId: target.id, detail: target.email });
   return { url: `${await appBaseUrl()}/reset-password?token=${token}` };
 }

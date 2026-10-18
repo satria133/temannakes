@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/session";
 import { saveSettings } from "@/lib/settings";
+import { logAudit } from "@/lib/audit";
 
 const schema = z.object({
   adminWhatsapp: z
@@ -27,6 +28,7 @@ export async function saveSettingsAction(_prev: SettingsState, formData: FormDat
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
 
   await saveSettings(parsed.data, admin.id);
+  await logAudit(admin, "settings.update", { detail: "WhatsApp, harga, info rekening" });
   revalidatePath("/admin/settings");
   revalidatePath("/nakes/topup");
   return { ok: true };
